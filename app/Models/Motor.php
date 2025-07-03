@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Motor extends Model
 {
-    /** @use HasFactory<\Database\Factories\MotorFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -118,6 +117,51 @@ class Motor extends Model
     {
         return $this->main_image ? asset('storage/' . $this->main_image) : asset('images/default-motor.jpg');
     }
+
+    public function getFeaturesAttribute($value)
+    {
+        $decoded = json_decode($value, true);
+
+        // Jika elemen berupa array seperti ['feature' => 'ABS'], ambil hanya valuenya
+        if (is_array($decoded) && isset($decoded[0]['feature'])) {
+            return collect($decoded)->pluck('feature')->toArray();
+        }
+
+        return $decoded; // fallback
+    }
+
+
+    public function getSpecificationsAttribute($value)
+    {
+        $decoded = is_array($value) ? $value : json_decode($value, true);
+
+        // Ubah jadi associative array: [nama => nilai]
+        return collect($decoded)->mapWithKeys(function ($item) {
+            if (is_array($item) && isset($item['spec_name']) && isset($item['spec_value'])) {
+                return [$item['spec_name'] => $item['spec_value']];
+            }
+            return [];
+        })->toArray();
+    }
+
+    public function setFeaturesAttribute($value)
+    {
+        $this->attributes['features'] = json_encode(
+            collect($value)->map(fn ($item) => ['feature' => is_array($item) ? $item['feature'] ?? '' : $item])
+        );
+    }
+
+    public function setSpecificationsAttribute($value)
+    {
+        $this->attributes['specifications'] = json_encode(
+            collect($value)->map(fn ($item) => [
+                'spec_name' => $item['spec_name'] ?? '',
+                'spec_value' => $item['spec_value'] ?? ''
+            ])
+        );
+    }
+
+
 
 
 

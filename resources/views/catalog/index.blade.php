@@ -33,10 +33,10 @@
                                         <div class="flex items-center">
                                             <input type="checkbox" id="category-{{ $category->id }}" name="category[]"
                                                    value="{{ $category->id }}"
-                                                   {{ in_array($category->id, (array)request('category')) ? 'checked' : '' }}
+                                                   {{ in_array($category->id, (array)request('category', [])) ? 'checked' : '' }}
                                                    class="rounded text-electric-blue focus:ring-electric-blue">
                                             <label for="category-{{ $category->id }}" class="ml-2 text-gray-600">
-                                                {{ $category->name }} ({{ $category->motors_count }})
+                                                {{ $category->name }} ({{ $category->motors_count ?? 0 }})
                                             </label>
                                         </div>
                                     @endforeach
@@ -86,11 +86,13 @@
                                 <h3 class="font-semibold text-gray-700 mb-3">Tahun Model</h3>
                                 <select name="year" class="w-full px-4 py-2 border rounded-lg focus:ring-electric-blue focus:border-electric-blue">
                                     <option value="">Pilih Tahun</option>
-                                    @foreach($years as $year)
-                                        <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
-                                            {{ $year }}
-                                        </option>
-                                    @endforeach
+                                    @if(isset($years) && is_array($years))
+                                        @foreach($years as $year)
+                                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                                {{ $year }}
+                                            </option>
+                                        @endforeach
+                                    @endif
                                 </select>
                             </div>
 
@@ -98,19 +100,21 @@
                             <div class="mb-6">
                                 <h3 class="font-semibold text-gray-700 mb-3">Warna Tersedia</h3>
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach($availableColors as $color)
-                                        <div>
-                                            <input type="checkbox" id="color-{{ $loop->index }}" name="color[]"
-                                                   value="{{ $color }}"
-                                                   {{ in_array($color, (array)request('color')) ? 'checked' : '' }}
-                                                   class="hidden">
-                                            <label for="color-{{ $loop->index }}"
-                                                   class="inline-block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-300 {{ in_array($color, (array)request('color')) ? 'border-honda-red' : '' }}"
-                                                   style="background-color: {{ $color }};"
-                                                   title="{{ $color }}">
-                                            </label>
-                                        </div>
-                                    @endforeach
+                                    @if(isset($availableColors) && is_array($availableColors))
+                                        @foreach($availableColors as $color)
+                                            <div>
+                                                <input type="checkbox" id="color-{{ $loop->index }}" name="color[]"
+                                                       value="{{ is_array($color) ? (isset($color['name']) ? $color['name'] : '') : $color }}"
+                                                       {{ in_array((is_array($color) ? (isset($color['name']) ? $color['name'] : '') : $color), (array)request('color', [])) ? 'checked' : '' }}
+                                                       class="hidden">
+                                                <label for="color-{{ $loop->index }}"
+                                                       class="inline-block w-8 h-8 rounded-full cursor-pointer border-2 border-gray-300 {{ in_array((is_array($color) ? (isset($color['name']) ? $color['name'] : '') : $color), (array)request('color', [])) ? 'border-honda-red' : '' }}"
+                                                       style="background-color: {{ is_array($color) ? (isset($color['hex']) ? $color['hex'] : (isset($color['name']) ? $color['name'] : '#000000')) : $color }};"
+                                                       title="{{ is_array($color) ? (isset($color['name']) ? $color['name'] : 'Color') : $color }}">
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </div>
                             </div>
 
@@ -118,17 +122,19 @@
                             <div class="mb-6">
                                 <h3 class="font-semibold text-gray-700 mb-3">Fitur</h3>
                                 <div class="space-y-2">
-                                    @foreach($availableFeatures as $feature)
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="feature-{{ $loop->index }}" name="features[]"
-                                                   value="{{ $feature }}"
-                                                   {{ in_array($feature, (array)request('features')) ? 'checked' : '' }}
-                                                   class="rounded text-electric-blue focus:ring-electric-blue">
-                                            <label for="feature-{{ $loop->index }}" class="ml-2 text-gray-600">
-                                                {{ $feature }}
-                                            </label>
-                                        </div>
-                                    @endforeach
+                                    @if(isset($availableFeatures) && is_array($availableFeatures))
+                                        @foreach($availableFeatures as $feature)
+                                            <div class="flex items-center">
+                                                <input type="checkbox" id="feature-{{ $loop->index }}" name="features[]"
+                                                       value="{{ is_array($feature) ? (isset($feature['name']) ? $feature['name'] : '') : $feature }}"
+                                                       {{ in_array((is_array($feature) ? (isset($feature['name']) ? $feature['name'] : '') : $feature), (array)request('features', [])) ? 'checked' : '' }}
+                                                       class="rounded text-electric-blue focus:ring-electric-blue">
+                                                <label for="feature-{{ $loop->index }}" class="ml-2 text-gray-600">
+                                                    {{ is_array($feature) ? (isset($feature['name']) ? $feature['name'] : 'Feature') : $feature }}
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </div>
                             </div>
 
@@ -181,7 +187,7 @@
                                         <option value="popularity" {{ request('sort_by') == 'popularity' ? 'selected' : '' }}>Populer</option>
                                     </select>
                                     <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
-                                    @foreach(request()->except('sort_by', 'sort_order') as $key => $value)
+                                    @foreach(request()->except(['sort_by', 'sort_order']) as $key => $value)
                                         @if(is_array($value))
                                             @foreach($value as $val)
                                                 <input type="hidden" name="{{ $key }}[]" value="{{ $val }}">
@@ -198,7 +204,7 @@
                     <!-- Results Info -->
                     <div class="mb-6">
                         <p class="text-gray-600">
-                            Menampilkan <span class="font-bold text-honda-red">{{ $motors->total() }}</span> motor
+                            Menampilkan <span class="font-bold text-honda-red">{{ isset($motors) ? $motors->total() : 0 }}</span> motor
                             @if(request()->anyFilled(['search', 'category', 'min_price', 'max_price', 'min_cc', 'max_cc', 'year', 'color', 'features']))
                                 berdasarkan filter yang dipilih
                             @endif
@@ -206,20 +212,22 @@
                     </div>
 
                     <!-- Motor Grid -->
-                    @if($motors->count() > 0)
+                    @if(isset($motors) && $motors->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($motors as $motor)
                                 <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
                                     <!-- Motor Image -->
-                                    @if($motor->images->first())
+                                    @if($motor->images && $motor->images->first())
                                         <div class="relative h-56 overflow-hidden">
                                             <img src="{{ asset('storage/' . $motor->images->first()->path) }}"
                                                  alt="{{ $motor->name }}"
                                                  class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
                                             <!-- Category Badge -->
-                                            <div class="absolute top-4 right-4 bg-gradient-to-r from-vibrant-orange to-honda-red text-white px-3 py-1 rounded-full text-sm font-bold">
-                                                {{ $motor->category->name }}
-                                            </div>
+                                            @if($motor->category)
+                                                <div class="absolute top-4 right-4 bg-gradient-to-r from-vibrant-orange to-honda-red text-white px-3 py-1 rounded-full text-sm font-bold">
+                                                    {{ $motor->category->name }}
+                                                </div>
+                                            @endif
                                         </div>
                                     @endif
 
@@ -227,10 +235,10 @@
                                     <div class="p-6">
                                         <div class="flex justify-between items-start mb-3">
                                             <h3 class="font-heading text-xl font-bold text-gray-800">{{ $motor->name }}</h3>
-                                            @if($motor->is_featured)
+                                            @if(isset($motor->is_featured) && $motor->is_featured)
                                                 <span class="px-2 py-1 bg-gradient-to-r from-sunny-yellow to-vibrant-orange text-white text-xs rounded-full">
-                                    Unggulan
-                                </span>
+                                                    Unggulan
+                                                </span>
                                             @endif
                                         </div>
 
@@ -238,15 +246,15 @@
                                         <div class="mb-4">
                                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                                 <span class="text-gray-600">Harga</span>
-                                                <span class="font-bold text-honda-red">Rp {{ number_format($motor->price, 0, ',', '.') }}</span>
+                                                <span class="font-bold text-honda-red">Rp {{ number_format($motor->price ?? 0, 0, ',', '.') }}</span>
                                             </div>
                                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                                 <span class="text-gray-600">CC Mesin</span>
-                                                <span class="font-medium">{{ $motor->engine_cc }}cc</span>
+                                                <span class="font-medium">{{ $motor->engine_cc ?? 0 }}cc</span>
                                             </div>
                                             <div class="flex justify-between items-center py-2">
                                                 <span class="text-gray-600">Tahun</span>
-                                                <span class="font-medium">{{ $motor->model_year }}</span>
+                                                <span class="font-medium">{{ $motor->model_year ?? '-' }}</span>
                                             </div>
                                         </div>
 
@@ -254,15 +262,28 @@
                                         <div class="mb-4">
                                             <p class="text-gray-600 mb-2">Warna Tersedia:</p>
                                             <div class="flex flex-wrap gap-2">
-                                                @foreach($motor->colors as $color)
-                                                    <div class="w-5 h-5 rounded-full border border-gray-300" style="background-color: {{ $color }};"></div>
-                                                @endforeach
+                                                @if(isset($motor->colors) && is_array($motor->colors))
+                                                    @foreach($motor->colors as $color)
+                                                        <div class="w-5 h-5 rounded-full border border-gray-300"
+                                                             style="background-color: {{ is_array($color) ? (isset($color['hex']) ? $color['hex'] : (isset($color['name']) ? $color['name'] : '#000000')) : $color }};"
+                                                             title="{{ is_array($color) ? (isset($color['name']) ? $color['name'] : 'Color') : $color }}"></div>
+                                                    @endforeach
+                                                @elseif(isset($motor->colors) && is_string($motor->colors))
+                                                    @php
+                                                        $colorArray = json_decode($motor->colors, true) ?: explode(',', $motor->colors);
+                                                    @endphp
+                                                    @foreach($colorArray as $color)
+                                                        <div class="w-5 h-5 rounded-full border border-gray-300"
+                                                             style="background-color: {{ trim($color) }};"
+                                                             title="{{ trim($color) }}"></div>
+                                                    @endforeach
+                                                @endif
                                             </div>
                                         </div>
 
                                         <!-- Action Buttons -->
                                         <div class="flex gap-3">
-                                            <a href="{{ route('motors.show', ['slug' => $motor->slug]) }}"
+                                            <a href="{{ route('motors.show', ['slug' => $motor->slug ?? $motor->id]) }}"
                                                class="flex-1 text-center bg-gradient-to-r from-electric-blue to-fresh-green hover:from-blue-600 hover:to-green-600 text-white py-2 px-4 rounded-lg font-medium">
                                                 Detail
                                             </a>
@@ -316,8 +337,11 @@
         document.querySelectorAll('label[for^="color-"]').forEach(label => {
             label.addEventListener('click', function() {
                 const checkboxId = this.getAttribute('for');
-                document.getElementById(checkboxId).checked = !document.getElementById(checkboxId).checked;
-                document.getElementById('filterForm').submit();
+                const checkbox = document.getElementById(checkboxId);
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    document.getElementById('filterForm').submit();
+                }
             });
         });
     </script>

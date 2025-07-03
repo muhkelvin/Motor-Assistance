@@ -88,7 +88,7 @@
                                     <div class="flex items-center">
                                         <span class="mr-2 text-gray-600">Rp</span>
                                         <input type="number" name="additional_costs"
-                                               value="{{ old('additional_costs', 500000) }}"
+                                               value="{{ old('additional_costs', 0) }}"
                                                class="w-full px-4 py-3 border rounded-lg focus:ring-electric-blue focus:border-electric-blue"
                                                placeholder="Contoh: 500000">
                                     </div>

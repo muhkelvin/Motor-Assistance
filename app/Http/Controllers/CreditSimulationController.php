@@ -133,8 +133,6 @@ class CreditSimulationController extends Controller
 
         // Tambahkan properti tambahan ke simulation
         $simulation->total_interest = $totalInterest;
-        $simulation->formatted_monthly_payment = $this->formatCurrency($simulation->monthly_payment);
-        $simulation->formatted_total_payment = $this->formatCurrency($simulation->total_payment);
 
         return view('credit-simulation.result', compact('simulation', 'comparisons', 'totalInterest'));
     }
